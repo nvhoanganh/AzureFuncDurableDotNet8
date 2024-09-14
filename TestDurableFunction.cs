@@ -6,6 +6,25 @@ using Microsoft.Extensions.Logging;
 
 namespace AnthonyDemo
 {
+    [DurableTask(nameof(SayHelloClass))]
+    public class SayHelloClass : TaskActivity<string, string>
+    {
+        private readonly ILogger<SayHelloClass> logger;
+
+        public SayHelloClass(ILogger<SayHelloClass> logger)
+        {
+            this.logger = logger;
+        }
+
+        public override async Task<string> RunAsync(TaskActivityContext context, string input)
+        {
+            logger.LogInformation($"Saying {input} back");
+            await Task.Delay(200);
+            return $"Hello {input} via Class!";
+        }
+    }
+
+
     public static class TestDurableFunction
     {
         [Function(nameof(TestDurableFunction))]
@@ -20,6 +39,11 @@ namespace AnthonyDemo
             outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Tokyo"));
             outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
             outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "London"));
+
+            // this shown as executed in the console but the activity function is not executed
+            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHelloClass), "There"));
+            // this shown as executed in the console but the activity function is not executed
+            outputs.Add(await context.CallSayHelloClassAsync("Blah"));
 
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
